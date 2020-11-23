@@ -130,10 +130,10 @@ BOOL            true|false
 INT             ([1-9][0-9]*)u?
 HEX             0(x|X)[1-9A-F][1-9A-F]*u?
 OCTA            0[1-7][0-7]*u?
-FLOAT           ([0-9]\.?[0-9]*)(((e|E)-)?|((e|E)\+)?|(e|E)?)[0-9]+(lf|l)?
+FLOAT			([0-9]*\.?[0-9]+)((e|E)-?[0-9]+)?(f|lf)?
 N               [234]
 M               [234]
-TYPE            color|void|bool|int|uint|float|double|(d|i|b)?vec|d?[mat]{N}x{M}
+TYPE            color|void|bool|int|uint|float|double|(d|i|b)?vec{N}|d?mat{N}x{M}
 STATE           rt_{IDENT}
 WHITESPACE      [ \t\r]+
 COMMENT         (([/][*][^*]*[*]+([^*/][^*]*[*]+)*[/])|(\/\/.*))        
