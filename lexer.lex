@@ -149,16 +149,11 @@ STATE			rt_{IDENTIFIER}
 
  /* TODO Implement the rest... */
 
+<INITIAL>{
+
 \n				{ line_number++; }
 
-{COMMENT}       {
-	int i = 0;
-	while (yytext[i]) {
-		if (yytext[i] == '\n')
-			line_number++;
-		i++;
-	}
-}
+"/*"			{ BEGIN(IN_COMMENT); }
 
 {WHITESPACE}    {}
 
@@ -329,7 +324,19 @@ rt_Light		return RT_LIGHT;
 
 .               { yylval.str = strdup(yytext); return ERROR; }
 
+}
 
+<IN_COMMENT>{
+
+\n				{ line_number++; }
+
+"*/"			{ BEGIN(INITIAL); }
+
+[^*\n]+			{}
+
+"*"				{}
+
+}
 
 %%
 
