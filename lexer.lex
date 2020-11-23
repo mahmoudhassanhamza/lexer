@@ -18,8 +18,6 @@ int line_number = 1;
 # include "parser.h"
 #else
 
-
-
 // Declare type for semantic value
 typedef union {
     bool bval;
@@ -125,52 +123,47 @@ enum {
 
  /* TODO Helper definitions here  */
 
-IDENT           [_a-zA-Z][_a-zA-Z0-9]*
-BOOL            true|false
-INT             ([1-9][0-9]*)u?
-HEX             0(x|X)[1-9A-F][1-9A-F]*u?
-OCTA            0[1-7][0-7]*u?
-FLOAT			([0-9]*\.?[0-9]+)((e|E)-?[0-9]+)?(f|lf)?
-N               [234]
-M               [234]
-TYPE            color|void|bool|int|uint|float|double|(d|i|b)?vec{N}|d?mat{N}x{M}
-STATE           rt_{IDENT}
 WHITESPACE      [ \t\r]+
-COMMENT         (([/][*][^*]*[*]+([^*/][^*]*[*]+)*[/])|(\/\/.*))        
+
+COMMENT         "/*"(.|\n)*"*/"
+
+BOOL			true|false
+
+INT             ([1-9][0-9]*)u?
+
+HEX             0(x|X)[0-9a-fA-F]+u?
+
+OCTA            0[0-7]*u?
+
+FLOAT			([0-9]*\.?[0-9]+)((e|E)-?[0-9]+)?(f|lf)?
+
+IDENTIFIER		[a-zA-Z][a-zA-Z0-9]*
+
+N				[234]
+
+TYPE			void|bool|int|uint|float|double|[dbi]?vec{N}|d?mat{N}(x{N})?|color
+
+STATE			rt_{IDENTIFIER}
 
 %%
 
  /* TODO Implement the rest... */
 
+<INITIAL>{
 
+\n				{ line_number++; }
 
+"/*"			{ BEGIN(IN_COMMENT); }
 
-{COMMENT}               { 
-    int i=0;
-    while(yytext[i])
-    {
-        if(yytext[i]=='\n')
-        line_number++;
-        i++;
-    }
-    }
-\n                      {line_number++;}
-{WHITESPACE}            { }
-{BOOL}		            { yylval.bval = !strcmp(yytext, "true"); return BOOL; }
-{INT}                   { yylval.ival = atoi(yytext); return INT ;}
-{HEX}                   { yylval.ival = strtol(yytext, NULL, 16); return INT ;}
-{OCTA}                  { yylval.ival =  strtol(yytext, NULL, 8); return INT ;}
-{TYPE}                  { yylval.str = strdup(yytext);return TYPE;}
-
-
+{WHITESPACE}    {}
 
 break			return BREAK;
 
 continue		return CONTINUE;
 
-do			    return DO;
+do				return DO;
 
-for			    return FOR;
+for				return FOR;
 
 while			return WHILE;
 
@@ -224,9 +217,9 @@ sample			return SAMPLE;
 
 subroutine		return SUBROUTINE;
 
-in			    return IN;
+in				return IN;
 
-out			    return OUT;
+out				return OUT;
 
 inout			return INOUT;
 
@@ -256,7 +249,7 @@ private			return PRIVATE;
 
 scratch			return SCRATCH;
 
-rt_Primitive	return RT_PRIMITIVE;
+rt_Primitive		return RT_PRIMITIVE;
 
 rt_Camera		return RT_CAMERA;
 
@@ -290,6 +283,7 @@ rt_Light		return RT_LIGHT;
 "?"             return '?';
 ":"             return ':';
 "="             return '=';
+
 "<<"            return LEFT_OP;
 ">>"            return RIGHT_OP;
 "++"            return INC_OP;
@@ -311,9 +305,38 @@ rt_Light		return RT_LIGHT;
 "|="            return OR_ASSIGN;
 "^="            return XOR_ASSIGN;
 "-="            return SUB_ASSIGN;
-{STATE}         { yylval.str = strdup(yytext);return STATE;}
-{IDENT}         { yylval.str = strdup(yytext); return IDENTIFIER; }
+
+{BOOL}		    { yylval.bval = !strcmp(yytext, "true"); return BOOL; }
+
+{HEX}           { yylval.ival = strtol(yytext, NULL, 16); return INT ;}
+
+{OCTA}          { yylval.ival =  strtol(yytext, NULL, 8); return INT ;}
+
+{INT}		    { yylval.ival = atoi(yytext); return INT; }
+
+{FLOAT}		    { yylval.fval = atof(yytext); return FLOAT; }
+
+{TYPE}		    { yylval.str = strdup(yytext); return TYPE; }
+
+{STATE}		   	{ yylval.str = strdup(yytext); return STATE; }
+
+{IDENTIFIER}	{ yylval.str = strdup(yytext); return IDENTIFIER; }
+
 .               { yylval.str = strdup(yytext); return ERROR; }
+
+}
+
+<IN_COMMENT>{
+
+\n				{ line_number++; }
+
+"*/"			{ BEGIN(INITIAL); }
+
+[^*\n]+			{}
+
+"*"				{}
+
+}
 
 %%
 
