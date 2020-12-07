@@ -1,0 +1,31 @@
+CLASS [SchlickDielectric] , Type: material
+DECLARATION [eta] , Type: float
+DECLARATION [f0] , Type: float
+DECLARATION [absorption] , Type: color
+EXPRESSION_STATEMENT
+EXPRESSION_STATEMENT
+EXPRESSION_STATEMENT
+FUNCTION_DEFINITION [constructor]
+DECLARATION [I] , Type: vec3 , Initialized
+DECLARATION [P] , Type: vec3 , Initialized
+DECLARATION [NN] , Type: vec3 , Initialized
+DECLARATION [eta_temp] , Type: float , Initialized
+DECLARATION [atten] , Type: color , Initialized
+EXPRESSION_STATEMENT
+EXPRESSION_STATEMENT
+EXPRESSION_STATEMENT
+COMPOUND_STATEMENT
+IF_STATEMENT
+DECLARATION [negNdotV] , Type: float , Initialized
+DECLARATION [k] , Type: float , Initialized
+DECLARATION [R] , Type: vec3 , Initialized
+DECLARATION [T] , Type: vec3 , Initialized
+EXPRESSION_STATEMENT
+COMPOUND_STATEMENT
+IF_STATEMENT
+DECLARATION [Fr] , Type: float , Initialized
+DECLARATION [Ft] , Type: float , Initialized
+DECLARATION [refl_result] , Type: color , Initialized
+DECLARATION [refr_result] , Type: color , Initialized
+EXPRESSION_STATEMENT
+FUNCTION_DEFINITION [shade]

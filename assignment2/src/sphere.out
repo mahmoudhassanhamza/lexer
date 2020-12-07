@@ -1,0 +1,28 @@
+CLASS [Sphere] , Type: primitive
+DECLARATION [center] , Type: vec3
+DECLARATION [radius] , Type: float
+EXPRESSION_STATEMENT
+EXPRESSION_STATEMENT
+FUNCTION_DEFINITION [constructor]
+DECLARATION [O] , Type: vec3 , Initialized
+DECLARATION [D] , Type: vec3 , Initialized
+DECLARATION [A] , Type: float , Initialized
+DECLARATION [B] , Type: float , Initialized
+DECLARATION [C] , Type: float , Initialized
+DECLARATION [disc] , Type: float , Initialized
+DECLARATION [r] , Type: float , Initialized
+DECLARATION [t0] , Type: float , Initialized
+EXPRESSION_STATEMENT
+COMPOUND_STATEMENT
+DECLARATION [t1] , Type: float , Initialized
+EXPRESSION_STATEMENT
+COMPOUND_STATEMENT
+IF_ELSE_STATEMENT
+COMPOUND_STATEMENT
+IF_STATEMENT
+FUNCTION_DEFINITION [intersect]
+EXPRESSION_STATEMENT
+FUNCTION_DEFINITION [computeNormal]
+EXPRESSION_STATEMENT
+EXPRESSION_STATEMENT
+FUNCTION_DEFINITION [computeBounds]
