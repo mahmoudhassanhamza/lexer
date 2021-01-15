@@ -125,7 +125,7 @@ enum {
 
 WHITESPACE      [ \t\r]+
 
-COMMENT         "/*"(.|\n)*"*/"
+COMMENT         "//"[^\n]*\n
 
 BOOL			true|false
 
@@ -137,7 +137,7 @@ OCTA            0[0-7]*u?
 
 FLOAT			([0-9]*\.?[0-9]+)((e|E)-?[0-9]+)?(f|lf)?
 
-IDENTIFIER		[a-zA-Z][a-zA-Z0-9]*
+IDENTIFIER		[_a-zA-Z][_a-zA-Z0-9]*
 
 N				[234]
 
@@ -154,6 +154,8 @@ STATE			rt_{IDENTIFIER}
 \n				{ line_number++; }
 
 "/*"			{ BEGIN(IN_COMMENT); }
+
+{COMMENT}		{ line_number++; }
 
 {WHITESPACE}    {}
 

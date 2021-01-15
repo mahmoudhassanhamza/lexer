@@ -50,6 +50,7 @@ static void yyerror(const char *s);
  * For example, if "function_header" should have a "str" value, use:
  * %type<str> function_header
  */
+ 
 
 /* Start production. */
 %start translation_unit
@@ -57,14 +58,15 @@ static void yyerror(const char *s);
 %%
 
 variable_identifier
-    : IDENTIFIER 
+    : IDENTIFIER
+	| STATE
     ;
 
 primary_expression
     : variable_identifier 
     | INT
-    | FLOAT 
-    | BOOL 
+    | FLOAT
+    | BOOL
     | '(' expression ')' 
     ;
 
@@ -215,9 +217,14 @@ assignment_operator
     ;
 
 expression
-    : assignment_expression 
-    | expression ',' assignment_expression 
+    : assignment_expression
+    | assignment_expression expressiond 
     ;
+	
+expressiond
+	: ',' assignment_expression
+	| ',' assignment_expression expressiond
+	;
 
 constant_expression
     : conditional_expression 
@@ -524,19 +531,26 @@ jump_statement
     ;
 
 translation_unit
-    : external_declaration 
-    | translation_unit external_declaration 
-	| class_declaration
-	| class_declaration translation_unit
+	: class_declaration
+	| class_declaration external_declarations
     ;
+	
+external_declarations
+	: external_declaration
+	| external_declaration external_declarations
+	;
 
 class_declaration
-	: CLASS IDENTIFIER ':' RT_MATERIAL ';'
+	: CLASS IDENTIFIER ':' RT_MATERIAL ';' { printf("CLASS [%s] , Type: material\n", $2); } 
+	| CLASS IDENTIFIER ':' RT_CAMERA ';' { printf("CLASS [%s] , Type: camera\n", $2); } 
+	| CLASS IDENTIFIER ':' RT_PRIMITIVE ';' { printf("CLASS [%s] , Type: primitive\n", $2); } 
 	;
 
 external_declaration
     : function_definition 
     | declaration 
+    | PUBLIC declaration 
+    | PRIVATE declaration 
     ;
 
 function_definition
@@ -703,7 +717,6 @@ int main(int argc, char **argv) {
     
     do {
         yyparse();
-		printf("parsed [%s]\n", yylval.str);
     } while (!feof(yyin));
     return 1;
 }
