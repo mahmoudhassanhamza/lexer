@@ -17,6 +17,7 @@ static void yyerror(const char *s);
 
 /* Enable verbose error messages. */
 %define parse.error verbose
+// %define parse.trace
 
 /* Declare type for semantic value. You may need to extend this. */
 %union {
@@ -218,13 +219,8 @@ assignment_operator
 
 expression
     : assignment_expression
-    | assignment_expression expressiond 
+    | expression ',' assignment_expression 
     ;
-	
-expressiond
-	: ',' assignment_expression
-	| ',' assignment_expression expressiond
-	;
 
 constant_expression
     : conditional_expression 
@@ -705,6 +701,7 @@ static void yyerror(const char *s) {
 }
 
 int main(int argc, char **argv) {
+	// yydebug = 1;
     if (argc > 1) {
         yyin = fopen(argv[1], "r");
         if (!yyin) {

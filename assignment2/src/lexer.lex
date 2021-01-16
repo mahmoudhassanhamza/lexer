@@ -179,6 +179,8 @@ if			    return IF;
 
 else			return ELSE;
 
+return			return RETURN;
+
 struct			return STRUCT;
 
 attribute		return ATTRIBUTE;
