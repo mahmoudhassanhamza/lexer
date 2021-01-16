@@ -13,6 +13,11 @@ extern int line_number;
 extern FILE *yyin;
 extern int yylex();
 static void yyerror(const char *s);
+
+static int is_valid_method(const char *f);
+static int is_valid_state(const char *f);
+static const char *rtsl_type_names[];
+static int rtsl_type;
 }
 
 /* Enable verbose error messages. */
@@ -52,6 +57,7 @@ static void yyerror(const char *s);
  * %type<str> function_header
  */
  
+%type<str> fully_specified_type
 
 /* Start production. */
 %start translation_unit
@@ -60,7 +66,11 @@ static void yyerror(const char *s);
 
 variable_identifier
     : IDENTIFIER
-	| STATE
+	| STATE {
+		if(!is_valid_state($1+3)) {
+			fprintf(stderr, "State variable %s not allowed in %s\n", $1+3, rtsl_type_names[rtsl_type]);
+		}
+	}
     ;
 
 primary_expression
@@ -258,7 +268,12 @@ function_header_with_parameters
     ;
 
 function_header
-    : fully_specified_type IDENTIFIER '(' 
+    : fully_specified_type IDENTIFIER '(' {
+		printf("FUNCTION_DEFINITION [%s]\n", $2);
+		if(!strcmp($1, "void") && !is_valid_method($2)) {
+			fprintf(stderr, "Interface method %s() not allowed in %s\n", $2, rtsl_type_names[rtsl_type]);
+		}
+	}
     ;
 
 parameter_declarator
@@ -287,10 +302,10 @@ init_declarator_list
 
 single_declaration
     : fully_specified_type 
-    | fully_specified_type IDENTIFIER 
+    | fully_specified_type IDENTIFIER  { printf("DECLARATION [%s] , Type: %s\n", $2, $1); }
     | fully_specified_type IDENTIFIER array_specifier
     | fully_specified_type IDENTIFIER array_specifier '=' initializer
-    | fully_specified_type IDENTIFIER '=' initializer 
+    | fully_specified_type IDENTIFIER '=' initializer { printf("DECLARATION [%s] , Type: %s, Initialized\n", $2, $1); }
     ;
 
 fully_specified_type
@@ -446,7 +461,7 @@ simple_statement
 
 compound_statement
     : '{' '}' 
-    | '{' statement_list '}' 
+    | '{' statement_list '}' { printf("COMPOUND_STATEMENT\n"); }
     ;
 
 statement_no_new_scope
@@ -466,7 +481,7 @@ statement_list
 
 expression_statement
     : ';' 
-    | expression ';' 
+    | expression ';' { printf("EXPRESSION_STATEMENT\n"); }
     ;
 
 selection_statement
@@ -474,8 +489,8 @@ selection_statement
     ;
 
 selection_rest_statement
-    : statement ELSE statement 
-    | statement 
+    : statement ELSE statement { printf("IF_ELSE_STATEMENT\n"); }
+    | statement { printf("IF_STATEMENT\n"); }
     ;
 
 condition
@@ -498,9 +513,9 @@ case_label
     ;
 
 iteration_statement
-    : WHILE '(' condition ')' statement_no_new_scope 
-    | DO statement WHILE '(' expression ')' ';' 
-    | FOR '(' for_init_statement for_rest_statement ')' statement_no_new_scope
+    : WHILE '(' condition ')' statement_no_new_scope { printf("WHILE_STATEMENT\n"); }
+    | DO statement WHILE '(' expression ')' ';' { printf("DO_WHILE_STATEMENT\n"); }
+    | FOR '(' for_init_statement for_rest_statement ')' statement_no_new_scope { printf("FOR_STATEMENT\n"); }
     ;
 
 for_init_statement
@@ -521,8 +536,8 @@ for_rest_statement
 jump_statement
     : CONTINUE ';' 
     | BREAK ';' 
-    | RETURN ';' 
-    | RETURN expression ';' 
+    | RETURN ';' { printf("RETURN_STATEMENT\n"); }
+    | RETURN expression ';' { printf("RETURN_STATEMENT\n"); }
     | DISCARD ';'   // Fragment shader only.
     ;
 
@@ -537,9 +552,11 @@ external_declarations
 	;
 
 class_declaration
-	: CLASS IDENTIFIER ':' RT_MATERIAL ';' { printf("CLASS [%s] , Type: material\n", $2); } 
-	| CLASS IDENTIFIER ':' RT_CAMERA ';' { printf("CLASS [%s] , Type: camera\n", $2); } 
-	| CLASS IDENTIFIER ':' RT_PRIMITIVE ';' { printf("CLASS [%s] , Type: primitive\n", $2); } 
+	: CLASS IDENTIFIER ':' RT_CAMERA ';' { rtsl_type = 0; printf("CLASS [%s] , Type: camera\n", $2); } 
+	| CLASS IDENTIFIER ':' RT_PRIMITIVE ';' { rtsl_type = 1; printf("CLASS [%s] , Type: primitive\n", $2); } 
+	| CLASS IDENTIFIER ':' RT_TEXTURE ';' { rtsl_type = 2; printf("CLASS [%s] , Type: texture\n", $2); } 
+	| CLASS IDENTIFIER ':' RT_MATERIAL ';' { rtsl_type = 3; printf("CLASS [%s] , Type: material\n", $2); } 
+	| CLASS IDENTIFIER ':' RT_LIGHT ';' { rtsl_type = 4; printf("CLASS [%s] , Type: light\n", $2); } 
 	;
 
 external_declaration
@@ -600,7 +617,7 @@ static const char *light_methods[] = {
 };
 
 static const char **interface_methods[] = {
-    primitive_methods, camera_methods, material_methods, texture_methods, light_methods, NULL
+    camera_methods, primitive_methods, texture_methods, material_methods, light_methods, NULL
 };
 
 static const char *camera_states[] = {
@@ -689,11 +706,46 @@ static const char *light_states[] = {
 };
 
 static const char **interface_states[] = {
-    primitive_states, camera_states, material_states, texture_states, light_states
+    camera_states, primitive_states, texture_states, material_states, light_states, NULL
 };
 
 /* TODO You'll probably want to add some additional functions to implement the
  * semantic checks here. */
+ 
+static const char *rtsl_type_names[] = {
+    "camera",
+    "primitive",
+    "texture",
+    "material",
+    "light",
+    NULL
+};
+
+static int is_valid_method(const char *f) {
+	const char **valid_methods = interface_methods[rtsl_type];
+	int i = 0;
+
+	while (valid_methods[i]) {
+		if (!strcmp(f, valid_methods[i]))
+			return 1;
+		i++;
+	}
+
+	return 0;
+}
+
+static int is_valid_state(const char *f) {
+	const char **valid_states = interface_states[rtsl_type];
+	int i = 0;
+
+	while (valid_states[i]) {
+		if (!strcmp(f, valid_states[i]))
+			return 1;
+		i++;
+	}
+
+	return 0;
+}
  
 static void yyerror(const char *s) {
     fprintf(stderr, "%s on line %d\n", s, line_number);
