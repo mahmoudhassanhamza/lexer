@@ -58,6 +58,10 @@ static int rtsl_type;
  */
  
 %type<str> fully_specified_type
+%type<str> function_prototype
+%type<str> function_declarator
+%type<str> function_header
+%type<str> function_header_with_parameters
 
 /* Start production. */
 %start translation_unit
@@ -268,12 +272,7 @@ function_header_with_parameters
     ;
 
 function_header
-    : fully_specified_type IDENTIFIER '(' {
-		printf("FUNCTION_DEFINITION [%s]\n", $2);
-		if(!strcmp($1, "void") && !is_valid_method($2)) {
-			fprintf(stderr, "Interface method %s() not allowed in %s\n", $2, rtsl_type_names[rtsl_type]);
-		}
-	}
+    : fully_specified_type IDENTIFIER '(' { $$ = $2; }
     ;
 
 parameter_declarator
@@ -461,7 +460,7 @@ simple_statement
 
 compound_statement
     : '{' '}' 
-    | '{' statement_list '}' { printf("COMPOUND_STATEMENT\n"); }
+    | '{' statement_list '}'
     ;
 
 statement_no_new_scope
@@ -470,8 +469,8 @@ statement_no_new_scope
     ;
 
 compound_statement_no_new_scope
-    : '{' '}' 
-    | '{' statement_list '}' 
+    : '{' '}' { printf("COMPOUND_STATEMENT\n"); }
+    | '{' statement_list '}' { printf("COMPOUND_STATEMENT\n"); }
     ;
 
 statement_list
@@ -567,7 +566,12 @@ external_declaration
     ;
 
 function_definition
-    : function_prototype compound_statement_no_new_scope 
+    : function_prototype compound_statement_no_new_scope {
+		printf("FUNCTION_DEFINITION [%s]\n", $1);
+		if(!is_valid_method($1)) {
+			fprintf(stderr, "Interface method %s() not allowed in %s\n", $1, rtsl_type_names[rtsl_type]);
+		}
+	}
     ;
 
 %%
@@ -723,15 +727,27 @@ static const char *rtsl_type_names[] = {
 
 static int is_valid_method(const char *f) {
 	const char **valid_methods = interface_methods[rtsl_type];
-	int i = 0;
-
-	while (valid_methods[i]) {
-		if (!strcmp(f, valid_methods[i]))
+	int j = 0;
+	while (valid_methods[j]) {
+		if (!strcmp(f, valid_methods[j]))
 			return 1;
-		i++;
+		j++;
 	}
 
-	return 0;
+	for (int i = 0; i < 5; i++) {
+		if (i == rtsl_type)
+			continue;
+			
+		const char **valid_methods = interface_methods[i];
+		int j = 0;
+		while (valid_methods[j]) {
+			if (!strcmp(f, valid_methods[j]))
+				return 0;
+			j++;
+		}
+	}
+
+	return 1;
 }
 
 static int is_valid_state(const char *f) {
