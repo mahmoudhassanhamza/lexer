@@ -3,7 +3,6 @@
 // STL 
 #include <iostream>
 #include <map>
-#include <vector>
 #include <set>
 #include <utility>
 
@@ -49,8 +48,10 @@ public:
 				else {
 					for (int j = 0; j < i.getNumOperands(); j++) {
 						const Value *v = i.getOperand(j);
-						if (uninitialized.find(v->getName().str()) != uninitialized.end())
+						if (uninitialized.find(v->getName().str()) != uninitialized.end()) {
 							usedWhileUninitialized.insert(v->getName().str());
+							break;
+						}
 					}
 				}
 			}
@@ -69,6 +70,35 @@ public:
 	FixingPass() : FunctionPass(ID){}
 
 	virtual bool runOnFunction(Function &F){
+		for (const BasicBlock &b : F) {
+			for (const Instruction &i : b) {
+				if (const auto a = dyn_cast<AllocaInst>(&i)) {
+					Type *type = a->getType()->getElementType();
+					if (type->isIntegerTy()) {
+						auto value = ConstantInt::get(type, 10, true);
+						auto pointer = a->getOperand(0);
+						std::cout << "value: " << value << std::endl;
+						std::cout << "pointer: " << pointer << std::endl;
+						StoreInst(value, pointer, a);
+					}
+					else if (type->isFloatingPointTy()) {
+						auto value = ConstantFP::get(type, 20.0);
+						auto pointer = a->getOperand(0);
+						std::cout << "value: " << value << std::endl;
+						std::cout << "pointer: " << pointer << std::endl;
+						StoreInst(value, pointer, a);
+					}
+					else if (type->isDoubleTy()) {
+						auto value = ConstantFP::get(type, 30.0);
+						auto pointer = a->getOperand(0);
+						std::cout << "value: " << value << std::endl;
+						std::cout << "pointer: " << pointer << std::endl;
+						StoreInst(value, pointer, a);
+					}
+				}
+			}
+		}
+		
 	    return true;
 	}
 };
