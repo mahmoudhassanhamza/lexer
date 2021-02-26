@@ -70,30 +70,21 @@ public:
 	FixingPass() : FunctionPass(ID){}
 
 	virtual bool runOnFunction(Function &F){
-		for (const BasicBlock &b : F) {
-			for (const Instruction &i : b) {
-				if (const auto a = dyn_cast<AllocaInst>(&i)) {
-					Type *type = a->getType()->getElementType();
+		for (BasicBlock &b : F) {
+			for (Instruction &i : b) {
+				if (AllocaInst *a = dyn_cast<AllocaInst>(&i)) {
+					Type *type = a->getAllocatedType();
 					if (type->isIntegerTy()) {
 						auto value = ConstantInt::get(type, 10, true);
-						auto pointer = a->getOperand(0);
-						std::cout << "value: " << value << std::endl;
-						std::cout << "pointer: " << pointer << std::endl;
-						StoreInst(value, pointer, a);
+						new StoreInst(value, a, a->getNextNode());
 					}
 					else if (type->isFloatingPointTy()) {
 						auto value = ConstantFP::get(type, 20.0);
-						auto pointer = a->getOperand(0);
-						std::cout << "value: " << value << std::endl;
-						std::cout << "pointer: " << pointer << std::endl;
-						StoreInst(value, pointer, a);
+						new StoreInst(value, a, a->getNextNode());
 					}
 					else if (type->isDoubleTy()) {
 						auto value = ConstantFP::get(type, 30.0);
-						auto pointer = a->getOperand(0);
-						std::cout << "value: " << value << std::endl;
-						std::cout << "pointer: " << pointer << std::endl;
-						StoreInst(value, pointer, a);
+						new StoreInst(value, a, a->getNextNode());
 					}
 				}
 			}
